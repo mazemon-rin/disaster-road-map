@@ -41,6 +41,19 @@
   let activeCategory = 'roads'; let pendingPoint = null; let pendingMarker = null; let editingId = null; let detailId = null; let deleteId = null;
   let records = loadRecords(); let trafficData = { updatedAt: null, source: '未接続', items: [] }; let trafficVolumePoints = [];
 
+  function addMapLegend() {
+    const mapLegend = L.control({ position: 'bottomleft' });
+    mapLegend.onAdd = () => {
+      const element = L.DomUtil.create('section', 'map-key');
+      element.setAttribute('aria-label', '地図の見方');
+      element.innerHTML = `<strong>地図の見方</strong><span><i class="map-key-dot volume"></i>青：交通量観測点</span><details><summary>記録の色</summary><span class="map-key-item"><i class="passable"></i>緑：通れた</span><span class="map-key-item"><i class="caution"></i>黄：注意</span><span class="map-key-item"><i class="blocked"></i>赤：通れなかった</span></details>`;
+      L.DomEvent.disableClickPropagation(element);
+      L.DomEvent.disableScrollPropagation(element);
+      return element;
+    };
+    mapLegend.addTo(map);
+  }
+
   function markerIcon(status) { const label = { passable: '通', caution: '注', blocked: '止' }[status] || '?'; const color = { passable: 'passable', caution: 'caution', blocked: 'blocked' }[status] || 'unknown'; return L.divIcon({ className: '', html: `<div class="record-marker ${color}"><span>${label}</span></div>`, iconSize: [32, 40], iconAnchor: [16, 40], popupAnchor: [0, -40] }); }
   function trafficIcon(category) { return L.divIcon({ className: '', html: `<div class="traffic-marker ${category}"><span>規</span></div>`, iconSize: [36, 36], iconAnchor: [18, 18], popupAnchor: [0, -18] }); }
   function renderRecords() { recordsLayer.clearLayers(); records.forEach((record) => { const marker = L.marker([record.latitude, record.longitude], { icon: markerIcon(record.status), title: `利用者記録：${statusLabels[record.status] || '不明'}` }).addTo(recordsLayer); marker.on('click', () => openRecordDetail(record)); }); }
@@ -63,10 +76,16 @@
     else { layers.landslideSteep.addTo(map); layers.landslideDebris.addTo(map); layers.landslideSlide.addTo(map); legend.innerHTML = '<strong>土砂災害の凡例</strong><span><i class="legend-swatch" style="background:#f0c34a"></i>警戒区域</span> <span><i class="legend-swatch" style="background:#d94c4c"></i>特別警戒区域</span><br>急傾斜地の崩壊・土石流・地すべりを表示しています。<br><strong>※この情報はリアルタイムではありません。</strong>最新の状況は公式情報をご確認ください。'; }
   }
   function setStatus(message) { $('status-message').textContent = message; }
-  function setSelection(point) { pendingPoint = point; if (pendingMarker) map.removeLayer(pendingMarker); pendingMarker = L.marker(point, { opacity: .78 }).addTo(map).bindPopup('<strong>選択中の場所</strong><br>下の「この場所を記録」ボタンを押してください。').openPopup(); $('record-location-button').disabled = false; $('clear-selection-button').disabled = false; setStatus('記録する場所を選択中です'); }
-  function clearSelection() { pendingPoint = null; if (pendingMarker) { map.removeLayer(pendingMarker); pendingMarker = null; } $('record-location-button').disabled = true; $('clear-selection-button').disabled = true; setStatus('場所の選択を解除しました'); }
-  function openRecordDialog(record = null) { editingId = record ? record.id : null; $('record-dialog-title').textContent = record ? '通行記録を編集' : 'この場所を記録'; $('record-position').textContent = pendingPoint ? `位置：${pendingPoint.lat.toFixed(5)}, ${pendingPoint.lng.toFixed(5)}` : record ? `位置：${record.latitude.toFixed(5)}, ${record.longitude.toFixed(5)}` : ''; $('record-memo').value = record?.memo || ''; document.querySelectorAll('input[name="record-status"]').forEach((input) => { input.checked = input.value === record?.status; }); $('record-save').disabled = !record; $('record-dialog').showModal(); }
-  function closeRecordDialog() { $('record-dialog').close(); editingId = null; }
+  function updateSelectionUi(message) { $('record-location-button').disabled = !pendingPoint; $('clear-selection-button').disabled = !pendingPoint; $('selection-message').textContent = message; }
+  function removePendingMarker() { if (pendingMarker) { map.removeLayer(pendingMarker); pendingMarker = null; } }
+  function setSelection(point) { pendingPoint = point; removePendingMarker(); updateSelectionUi('場所を選択しました。「この場所を記録」を押すと記録入力を開きます。'); setStatus('場所を選択しました'); }
+  function showPendingMarker() { if (!pendingPoint) return; removePendingMarker(); pendingMarker = L.circleMarker(pendingPoint, { radius: 9, color: '#a85027', fillColor: '#e99662', fillOpacity: .88, weight: 3, dashArray: '4 3', interactive: false }).addTo(map).bindTooltip('記録する場所', { direction: 'top' }); }
+  function clearSelection() { pendingPoint = null; removePendingMarker(); updateSelectionUi('地図から場所を選んでください。'); setStatus('場所の選択を解除しました'); }
+  function resetRecordInput() { $('record-memo').value = ''; document.querySelectorAll('input[name="record-status"]').forEach((input) => { input.checked = false; }); $('record-save').disabled = true; }
+  function beginRecord() { if (!pendingPoint) { toast('地図から場所を選んでください'); return; } showPendingMarker(); openRecordDialog(); }
+  function openRecordDialog(record = null) { editingId = record ? record.id : null; $('record-dialog-title').textContent = record ? '通行記録を編集' : 'この場所を記録'; $('record-position').textContent = pendingPoint ? `選択した場所（緯度 ${pendingPoint.lat.toFixed(5)} / 経度 ${pendingPoint.lng.toFixed(5)}）` : record ? `位置：${record.latitude.toFixed(5)}, ${record.longitude.toFixed(5)}` : ''; $('record-memo').value = record?.memo || ''; document.querySelectorAll('input[name="record-status"]').forEach((input) => { input.checked = input.value === record?.status; }); $('record-save').disabled = !record; $('record-dialog').showModal(); }
+  function closeRecordDialog() { if ($('record-dialog').open) $('record-dialog').close(); editingId = null; }
+  function cancelRecordDialog() { const wasEditing = Boolean(editingId); resetRecordInput(); closeRecordDialog(); if (!wasEditing) clearSelection(); }
   function handleRecordSave() { const selected = document.querySelector('input[name="record-status"]:checked'); if (!selected) return; const now = new Date().toISOString(); if (editingId) { const target = records.find((record) => record.id === editingId); if (target) { target.status = selected.value; target.memo = safeText($('record-memo').value); target.updatedAt = now; } } else if (pendingPoint) { records.push({ id: `record-${Date.now()}`, latitude: pendingPoint.lat, longitude: pendingPoint.lng, status: selected.value, memo: safeText($('record-memo').value), createdAt: now, updatedAt: now }); } saveRecords(); renderRecords(); clearSelection(); closeRecordDialog(); toast('通行記録を保存しました'); }
   function openRecordDetail(record) { detailId = record.id; $('detail-status').textContent = statusLabels[record.status] || '不明'; $('detail-memo').textContent = record.memo || 'メモなし'; $('detail-created').textContent = formatDate(record.createdAt); $('detail-updated').textContent = formatDate(record.updatedAt); $('record-detail-dialog').showModal(); }
   function deleteRecord(recordId) { records = records.filter((record) => record.id !== recordId); saveRecords(); renderRecords(); toast('通行記録を削除しました'); }
@@ -76,9 +95,10 @@
   function updateTrafficMessage() { if (!trafficData.updatedAt && trafficData.items.length === 0) { $('last-updated').textContent = '公式情報：未取得'; $('data-message').textContent = '交通規制データは現在接続されていません。規制がないという意味ではありません。最新情報は公式サイトで確認してください。'; return; } $('last-updated').textContent = `公式情報の最終取得：${formatDate(trafficData.updatedAt)}`; $('data-message').textContent = trafficData.items.length ? `公式交通規制：${trafficData.items.length}件（${trafficData.source}）` : '交通規制データを取得しました。現在表示できる規制情報はありません。'; }
   async function refresh() { const button = $('refresh-button'); if (button.disabled) return; button.disabled = true; button.textContent = '更新中…'; setStatus('交通量情報・公式情報を確認しています…'); const results = await Promise.allSettled([loadTrafficData(), loadTrafficVolume()]); const success = results.some((result) => result.status === 'fulfilled'); if (success) { setStatus('情報を更新しました'); toast('情報を更新しました'); } else { setStatus('情報を更新できませんでした'); toast('情報を更新できませんでした。通信状態と公式情報をご確認ください。'); } button.disabled = false; button.textContent = '↻ 更新'; }
 
+  addMapLegend();
   map.on('click', (event) => setSelection(event.latlng));
-  $('record-location-button').addEventListener('click', () => openRecordDialog()); $('clear-selection-button').addEventListener('click', clearSelection);
-  $('record-form').addEventListener('submit', (event) => { event.preventDefault(); handleRecordSave(); }); $('record-cancel').addEventListener('click', closeRecordDialog);
+  $('record-location-button').addEventListener('click', beginRecord); $('clear-selection-button').addEventListener('click', clearSelection);
+  $('record-form').addEventListener('submit', (event) => { event.preventDefault(); handleRecordSave(); }); $('record-cancel').addEventListener('click', cancelRecordDialog); $('record-dialog').addEventListener('cancel', (event) => { event.preventDefault(); cancelRecordDialog(); });
   document.querySelectorAll('input[name="record-status"]').forEach((input) => input.addEventListener('change', () => { $('record-save').disabled = false; }));
   $('detail-close').addEventListener('click', () => $('record-detail-dialog').close()); $('detail-edit').addEventListener('click', () => { const record = records.find((item) => item.id === detailId); $('record-detail-dialog').close(); if (record) openRecordDialog(record); }); $('detail-delete').addEventListener('click', () => { deleteId = detailId; $('record-detail-dialog').close(); $('delete-dialog').showModal(); });
   $('delete-cancel').addEventListener('click', () => $('delete-dialog').close()); $('delete-confirm').addEventListener('click', () => { if (deleteId) deleteRecord(deleteId); deleteId = null; $('delete-dialog').close(); });

@@ -211,6 +211,8 @@
       fillColor: '#55a9d6',
       fillOpacity: 0.9,
       weight: 2,
+      // 青い観測点を押したときは、地図クリックとして扱わず交通量ポップアップだけを開く。
+      bubblingMouseEvents: false,
     }).bindPopup(createPopup(point));
   }
 

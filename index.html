@@ -39,7 +39,7 @@
         <button id="clear-selection-button" class="button button-outline" type="button" disabled>選択を解除</button>
       </div>
       <button id="location-button" class="button button-primary map-location-button" type="button" aria-label="現在地を表示">📍 現在地</button>
-      <p class="map-help">地図をクリックすると仮マーカーが表示されます。確認後に記録してください。</p>
+      <p id="selection-message" class="map-help" role="status">地図から場所を選んでください。</p>
     </section>
 
     <section class="control-panel" aria-labelledby="controls-title">
@@ -70,6 +70,16 @@
         <label><input id="traffic-volume-toggle" type="checkbox" checked> 交通量観測点</label>
         <span id="traffic-volume-status" role="status">交通量情報：未取得</span>
       </div>
+      <p class="traffic-volume-help"><i class="map-key-dot volume" aria-hidden="true"></i><strong>青い丸：交通量の観測地点</strong><br>タップすると5分間の交通量を確認できます。通行可否や安全性を示すものではありません。</p>
+      <section class="quick-guide" aria-labelledby="quick-guide-title">
+        <h3 id="quick-guide-title">使い方</h3>
+        <ol>
+          <li>地図で場所を選ぶ</li>
+          <li>「この場所を記録」を押す</li>
+          <li>「通れた・注意・通れなかった」を選んで保存</li>
+        </ol>
+        <p>青い丸は交通量観測地点です。タップすると交通量を確認できます。</p>
+      </section>
       <div id="layer-legend" class="legend" hidden></div>
     </section>
 
@@ -106,9 +116,11 @@
       <h2 id="record-dialog-title">この場所を記録</h2>
       <p id="record-position" class="small-text"></p>
       <fieldset><legend>状態を選択してください</legend>
-        <label><input type="radio" name="record-status" value="passable"> 通れた</label>
-        <label><input type="radio" name="record-status" value="caution"> 注意</label>
-        <label><input type="radio" name="record-status" value="blocked"> 通れなかった</label>
+        <div class="record-status-options">
+          <label class="status-option passable-option"><input type="radio" name="record-status" value="passable"> 通れた</label>
+          <label class="status-option caution-option"><input type="radio" name="record-status" value="caution"> 注意</label>
+          <label class="status-option blocked-option"><input type="radio" name="record-status" value="blocked"> 通れなかった</label>
+        </div>
       </fieldset>
       <label class="field-label" for="record-memo">メモ（任意）<textarea id="record-memo" maxlength="50" rows="3" placeholder="例：倒木あり、片側のみ通行可能"></textarea></label>
       <div class="dialog-actions"><button id="record-cancel" class="button button-outline" type="button">キャンセル</button><button id="record-save" class="button button-primary" type="submit" disabled>保存</button></div>

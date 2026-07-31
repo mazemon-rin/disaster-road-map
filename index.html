@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="熊本周辺の災害リスク情報と公式情報への入口をまとめる地図アプリ">
+  <title>熊本 災害道路マップ β</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">情報確認の補助ツール</p>
+      <h1>熊本 災害道路マップ <span>β</span></h1>
+      <p class="subtitle">災害リスクと公式情報を一つの地図で確認</p>
+    </div>
+    <button id="refresh-button" class="button button-light" type="button">↻ 更新</button>
+  </header>
+
+  <main class="container">
+    <section class="notice-panel" aria-labelledby="notice-title">
+      <div class="section-heading"><h2 id="notice-title">⚠ 重要なお知らせ</h2><span class="badge">公式情報を確認</span></div>
+      <p>この欄は公式情報への入口です。リアルタイム情報が未接続の場合があります。最新情報は公式サイトで確認してください。</p>
+      <div class="notice-links">
+        <a href="https://www.jartic.or.jp/" target="_blank" rel="noopener noreferrer">JARTIC 道路交通情報 ↗</a>
+        <a href="https://ihighway.jp/pcsite/" target="_blank" rel="noopener noreferrer">NEXCO iHighway ↗</a>
+        <a href="https://www.pref.kumamoto.jp/bousai/" target="_blank" rel="noopener noreferrer">熊本県防災情報 ↗</a>
+        <a href="https://disaster-map.its-mo.com/" target="_blank" rel="noopener noreferrer">Honda 通行実績情報マップ ↗</a>
+        <a href="https://www.toyota.co.jp/jpn/auto/passable_route/map/" target="_blank" rel="noopener noreferrer">Toyota 通れた道マップ ↗</a>
+      </div>
+    </section>
+
+    <section class="map-section" aria-labelledby="map-title">
+      <div class="section-heading compact"><h2 id="map-title">地図</h2><span id="status-message" role="status">熊本市周辺を表示中</span></div>
+      <div id="map" aria-label="熊本周辺の災害情報地図"></div>
+      <div class="map-actions">
+        <button id="record-location-button" class="button button-accent" type="button" disabled>この場所を記録</button>
+        <button id="clear-selection-button" class="button button-outline" type="button" disabled>選択を解除</button>
+      </div>
+      <button id="location-button" class="button button-primary map-location-button" type="button" aria-label="現在地を表示">📍 現在地</button>
+      <p class="map-help">地図をクリックすると仮マーカーが表示されます。確認後に記録してください。</p>
+    </section>
+
+    <section class="control-panel" aria-labelledby="controls-title">
+      <h2 id="controls-title">表示する情報</h2>
+      <div class="controls-grid">
+        <label class="field-label" for="region-select">地域を選択
+          <select id="region-select">
+            <option value="kumamoto">熊本市</option>
+            <option value="mashiki">益城町</option>
+            <option value="kashima">嘉島町</option>
+            <option value="mifune">御船町</option>
+            <option value="uto">宇土市</option>
+            <option value="uki">宇城市</option>
+            <option value="aso">阿蘇地域</option>
+            <option value="yatsushiro">八代地域</option>
+            <option value="hitoyoshi">人吉・球磨地域</option>
+          </select>
+        </label>
+        <div class="field-label">災害分類
+          <div class="category-buttons" role="group" aria-label="災害分類">
+            <button class="category-button is-active" data-category="roads" type="button">地震・道路規制</button>
+            <button class="category-button" data-category="flood" type="button">洪水・冠水</button>
+            <button class="category-button" data-category="landslide" type="button">土砂災害</button>
+          </div>
+        </div>
+      </div>
+      <div class="traffic-volume-controls">
+        <label><input id="traffic-volume-toggle" type="checkbox" checked> 交通量観測点</label>
+        <span id="traffic-volume-status" role="status">交通量情報：未取得</span>
+      </div>
+      <div id="layer-legend" class="legend" hidden></div>
+    </section>
+
+    <section class="info-section" aria-labelledby="nearby-title">
+      <div class="section-heading"><h2 id="nearby-title">周辺の公式情報</h2><span id="last-updated">公式情報：未取得</span></div>
+      <p id="data-message">交通規制データは現在接続されていません。最新情報は公式サイトで確認してください。</p>
+      <button id="official-links-button" class="button button-outline" type="button">公式情報を開く</button>
+    </section>
+
+    <section class="record-legend" aria-labelledby="record-legend-title">
+      <h2 id="record-legend-title">自分の通行記録</h2>
+      <div class="legend-items"><span><i class="record-dot passable">通</i> 通れた</span><span><i class="record-dot caution">注</i> 注意</span><span><i class="record-dot blocked">止</i> 通れなかった</span></div>
+      <button id="delete-all-button" class="text-button" type="button">保存した記録をすべて削除</button>
+    </section>
+
+    <section class="disclaimer">
+      <h2>ご利用上の注意</h2>
+      <p>本アプリは、道路・災害に関する公式情報を確認しやすくするための補助ツールです。地図上の表示や利用者自身の記録は、道路の安全性や通行可能性を保証するものではありません。災害時は、警察、消防、自治体、気象庁、道路管理者などの最新情報と現地の指示に従ってください。冠水した道路や土砂災害の危険がある道路には進入しないでください。</p>
+      <p>このサービスは、交通量API機能を使用していますが、サービスの内容は国土交通省によって保証されたものではありません。</p>
+      <p>国土交通省API機能による交通量（参考値）を加工して作成。交通量は道路の通行可否・安全性を保証するものではありません。</p>
+      <p class="source"><a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener noreferrer">背景地図：国土地理院 地理院タイル</a>　<a href="https://disaportal.gsi.go.jp/" target="_blank" rel="noopener noreferrer">災害情報：国土地理院 ハザードマップポータルサイト</a>　<a href="https://leafletjs.com/" target="_blank" rel="noopener noreferrer">地図表示：Leaflet</a></p>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p>交通規制情報は未接続の場合があります。公式情報を必ず確認してください。</p>
+    <p>ライセンス: MIT License</p>
+    <p>著作権表示: Copyright (c) 2026 mazemon-rin</p>
+    <p><a href="https://note.com/moral_gibbon7542" target="_blank" rel="noopener noreferrer">note: mazemon-rinの活動記録</a></p>
+  </footer>
+
+  <dialog id="record-dialog" class="dialog">
+    <form id="record-form" method="dialog">
+      <h2 id="record-dialog-title">この場所を記録</h2>
+      <p id="record-position" class="small-text"></p>
+      <fieldset><legend>状態を選択してください</legend>
+        <label><input type="radio" name="record-status" value="passable"> 通れた</label>
+        <label><input type="radio" name="record-status" value="caution"> 注意</label>
+        <label><input type="radio" name="record-status" value="blocked"> 通れなかった</label>
+      </fieldset>
+      <label class="field-label" for="record-memo">メモ（任意）<textarea id="record-memo" maxlength="50" rows="3" placeholder="例：倒木あり、片側のみ通行可能"></textarea></label>
+      <div class="dialog-actions"><button id="record-cancel" class="button button-outline" type="button">キャンセル</button><button id="record-save" class="button button-primary" type="submit" disabled>保存</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="record-detail-dialog" class="dialog">
+    <div>
+      <h2>通行記録</h2>
+      <dl class="record-details">
+        <dt>状態</dt><dd id="detail-status"></dd>
+        <dt>メモ</dt><dd id="detail-memo"></dd>
+        <dt>登録日時</dt><dd id="detail-created"></dd>
+        <dt>更新日時</dt><dd id="detail-updated"></dd>
+      </dl>
+      <div class="dialog-actions"><button id="detail-close" class="button button-outline" type="button">閉じる</button><button id="detail-edit" class="button button-primary" type="button">編集</button><button id="detail-delete" class="button button-danger" type="button">削除</button></div>
+    </div>
+  </dialog>
+
+  <dialog id="delete-dialog" class="dialog">
+    <div>
+      <h2>記録を削除しますか？</h2>
+      <p>この記録を削除しますか？削除後は元に戻せません。</p>
+      <div class="dialog-actions"><button id="delete-cancel" class="button button-outline" type="button">キャンセル</button><button id="delete-confirm" class="button button-danger" type="button">削除する</button></div>
+    </div>
+  </dialog>
+
+  <dialog id="links-dialog" class="dialog"><div><h2>公式情報へのリンク</h2><ul class="link-list" id="official-links-list"></ul><div class="dialog-actions"><button class="button button-outline close-dialog" type="button">閉じる</button></div></div></dialog>
+  <dialog id="first-use-dialog" class="dialog"><div><h2>ご利用前にお読みください</h2><p>このアプリの表示や利用者の記録は、道路の安全性・通行可能性・避難経路を保証しません。必ず最新の公式情報と現地の指示を確認してください。</p><div class="dialog-actions"><button id="first-use-close" class="button button-primary" type="button">確認しました</button></div></div></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/traffic-volume.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+name = "kumamoto-traffic-volume-worker"
+main = "traffic-volume-worker.js"
+compatibility_date = "2026-07-31"
+
+[vars]
+# GitHub Pages本番Originへ置き換えてください。ワイルドカードは禁止です。
+ALLOWED_ORIGIN = "https://YOUR-GITHUB-USER.github.io"

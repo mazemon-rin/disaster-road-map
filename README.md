@@ -36,11 +36,25 @@
 
 ## 交通量情報について
 
-本アプリでは、国土交通省/JARTIC系の交通量APIから取得した交通量を表示する構造を用意しています。交通量データは、常設トラフィックカウンター等の観測値です。この情報は、道路の通行可否や安全性を保証するものではありません。災害時は、必ず道路管理者、JARTIC、自治体などの最新情報を確認してください。
+本アプリでは、GitHub PagesからCloudflare Workerを経由して、国土交通省/JARTIC系の交通量APIから交通量を取得します。
+
+```text
+GitHub Pages
+  ↓ fetch
+Cloudflare Worker
+  ↓ fetch
+xROAD/JARTIC交通量API
+```
+
+交通量データは常設トラフィックカウンター等の観測値です。交通量は参考値であり、道路の通行可否や安全性を保証するものではありません。災害時は、必ず道路管理者、JARTIC、自治体などの最新情報を確認してください。
 
 5分間交通量は、観測後おおむね20分後に提供されます。API認証やブラウザからの直接取得が利用できない場合は、交通量APIを「認証設定が必要」と表示し、地図や利用者記録は継続して使えるようにしています。
 
-交通量APIをGitHub Pagesから利用する場合は、Cloudflare Workerなどの中継を使用します。Workerの設定例は `worker/wrangler.toml.example`、コードは `worker/traffic-volume-worker.js` にあります。`js/config.js`へ本番Worker URLを設定するまで、交通量APIは接続しません。APIキーや認証情報はHTML・JavaScriptへ保存しません。
+5分値はリアルタイムそのものではなく、観測後おおむね20分後に提供されます。交通量APIの取得に失敗しても、地図、災害分類、現在地、通行記録、localStorageなどの基本機能は利用できます。
+
+WorkerのURLは `https://disaster-road-traffic-api.rinrin8nana.workers.dev/` です。Workerのコードは `worker/traffic-volume-worker.js`、設定例は `worker/wrangler.toml.example` にあります。GitHub PagesからJARTIC APIへ直接接続せず、必ずWorkerを経由します。APIキーや認証情報はHTML・JavaScriptへ保存しません。
+
+このサービスは、交通量API機能を使用していますが、サービスの内容は国土交通省によって保証されたものではありません。国土交通省API機能による交通量（参考値）を加工して作成しています。交通量は道路の通行可否・安全性を保証するものではありません。
 
 ## ローカルで確認する
 

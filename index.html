@@ -12,10 +12,12 @@
   <header class="app-header">
     <div>
       <p class="eyebrow">情報確認の補助ツール</p>
-      <h1>熊本 災害道路マップ <span>β</span></h1>
+      <div class="app-title-row">
+        <h1>熊本 災害道路マップ <span>β</span></h1>
+        <span class="version-badge" aria-label="バージョン 1.10">V1.10</span>
+      </div>
       <p class="subtitle">災害リスクと公式情報を一つの地図で確認</p>
     </div>
-    <button id="refresh-button" class="button button-light" type="button">↻ 更新</button>
   </header>
 
   <main class="container">
@@ -33,13 +35,25 @@
 
     <section class="map-section" aria-labelledby="map-title">
       <div class="section-heading compact"><h2 id="map-title">地図</h2><span id="status-message" role="status">熊本市周辺を表示中</span></div>
+      <div class="map-toolbar" aria-label="地図の操作">
+        <button id="location-button" class="button button-outline" type="button" aria-label="現在地へ移動">📍 現在地へ移動</button>
+        <button id="refresh-button" class="button button-primary" type="button">↻ 地図更新</button>
+      </div>
+      <div class="map-flow" aria-label="通行記録の手順">
+        <strong>記録の流れ</strong>
+        <ol><li>地図をタップ</li><li>選択地点を確認</li><li>記録ボタンを押す</li></ol>
+      </div>
       <div id="map" aria-label="熊本周辺の災害情報地図"></div>
+      <div id="selection-panel" class="selection-panel is-empty" aria-live="polite">
+        <span class="selection-label">記録する場所</span>
+        <strong id="selection-message">まだ選択されていません</strong>
+        <span id="selection-guidance">地図上の記録したい地点をタップしてください。</span>
+        <span id="selection-coordinates" class="selection-coordinates" hidden></span>
+      </div>
       <div class="map-actions">
-        <button id="record-location-button" class="button button-accent" type="button" disabled>この場所を記録</button>
+        <button id="record-location-button" class="button button-accent" type="button" disabled>地図で場所を選んでください</button>
         <button id="clear-selection-button" class="button button-outline" type="button" disabled>選択を解除</button>
       </div>
-      <button id="location-button" class="button button-primary map-location-button" type="button" aria-label="現在地を表示">📍 現在地</button>
-      <p id="selection-message" class="map-help" role="status">地図から場所を選んでください。</p>
     </section>
 
     <section class="control-panel" aria-labelledby="controls-title">
@@ -61,9 +75,10 @@
         <div class="field-label">災害分類
           <div class="category-buttons" role="group" aria-label="災害分類">
             <button class="category-button is-active" data-category="roads" type="button">地震・道路規制</button>
-            <button class="category-button" data-category="flood" type="button">洪水・冠水</button>
-            <button class="category-button" data-category="landslide" type="button">土砂災害</button>
+            <button class="category-button" data-category="flood" type="button"><span>洪水・冠水</span><small>リアルタイム情報ではありません</small></button>
+            <button class="category-button" data-category="landslide" type="button"><span>土砂災害</span><small>リアルタイム情報ではありません</small></button>
           </div>
+          <p id="category-notice" class="category-notice" role="status">道路規制の公式データは未接続の場合があります。最新情報は公式サイトでも確認してください。</p>
         </div>
       </div>
       <div class="traffic-volume-controls">
@@ -71,15 +86,6 @@
         <span id="traffic-volume-status" role="status">交通量情報：未取得</span>
       </div>
       <p class="traffic-volume-help"><i class="map-key-dot volume" aria-hidden="true"></i><strong>青い丸：交通量の観測地点</strong><br>タップすると5分間の交通量を確認できます。通行可否や安全性を示すものではありません。</p>
-      <section class="quick-guide" aria-labelledby="quick-guide-title">
-        <h3 id="quick-guide-title">使い方</h3>
-        <ol>
-          <li>地図で場所を選ぶ</li>
-          <li>「この場所を記録」を押す</li>
-          <li>「通れた・注意・通れなかった」を選んで保存</li>
-        </ol>
-        <p>青い丸は交通量観測地点です。タップすると交通量を確認できます。</p>
-      </section>
       <div id="layer-legend" class="legend" hidden></div>
     </section>
 

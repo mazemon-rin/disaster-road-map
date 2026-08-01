@@ -18,6 +18,7 @@
     ['ハザードマップポータルサイト', 'https://disaportal.gsi.go.jp/']
   ];
   const fuelLinks = [
+    ['資源エネルギー庁 熊本地区の給油所営業状況（公式）', 'https://www.enecho-ss.meti.go.jp/b/enecho/'],
     ['資源エネルギー庁 住民拠点SS検索（災害時の営業状況）', 'https://www.enecho.meti.go.jp/category/resources_and_fuel/distribution/juminkyotenss/'],
     ['Google Maps ガソリンスタンド検索', 'https://www.google.com/maps/search/ガソリンスタンド/'],
     ['ガソナビ（価格比較）', 'https://gasonavi.app/'],

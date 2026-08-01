@@ -31,6 +31,7 @@
         <a href="https://disaster-map.its-mo.com/" target="_blank" rel="noopener noreferrer">Honda 通行実績情報マップ ↗</a>
         <a href="https://www.toyota.co.jp/jpn/auto/passable_route/map/" target="_blank" rel="noopener noreferrer">Toyota 通れた道マップ ↗</a>
       </div>
+      <button id="fuel-links-button" class="button button-outline fuel-links-button" type="button">⛽ ガソリン給油状況まとめ</button>
     </section>
 
     <section class="map-section" aria-labelledby="map-title">
@@ -155,6 +156,7 @@
   </dialog>
 
   <dialog id="links-dialog" class="dialog"><div><h2>公式情報へのリンク</h2><ul class="link-list" id="official-links-list"></ul><div class="dialog-actions"><button class="button button-outline close-dialog" type="button">閉じる</button></div></div></dialog>
+  <dialog id="fuel-links-dialog" class="dialog"><div><h2>ガソリン給油状況まとめ</h2><p class="dialog-notice">営業状況・在庫・待ち時間は変動します。表示だけで給油可能とは判断せず、各サイトや店舗へ確認してください。</p><ul class="link-list" id="fuel-links-list"></ul><div class="dialog-actions"><button class="button button-outline close-fuel-dialog" type="button">閉じる</button></div></div></dialog>
   <dialog id="first-use-dialog" class="dialog"><div><h2>ご利用前にお読みください</h2><p>このアプリの表示や利用者の記録は、道路の安全性・通行可能性・避難経路を保証しません。必ず最新の公式情報と現地の指示を確認してください。</p><div class="dialog-actions"><button id="first-use-close" class="button button-primary" type="button">確認しました</button></div></div></dialog>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 

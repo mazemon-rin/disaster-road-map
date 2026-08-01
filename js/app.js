@@ -17,6 +17,13 @@
     ['気象庁 防災情報', 'https://www.jma.go.jp/bosai/'], ['川の防災情報', 'https://www.river.go.jp/'],
     ['ハザードマップポータルサイト', 'https://disaportal.gsi.go.jp/']
   ];
+  const fuelLinks = [
+    ['資源エネルギー庁 住民拠点SS検索（災害時の営業状況）', 'https://www.enecho.meti.go.jp/category/resources_and_fuel/distribution/juminkyotenss/'],
+    ['Google Maps ガソリンスタンド検索', 'https://www.google.com/maps/search/ガソリンスタンド/'],
+    ['ガソナビ（価格比較）', 'https://gasonavi.app/'],
+    ['gogo.gs（価格投稿・店舗情報）', 'https://www.gogo.gs/'],
+    ['ENEOS サービスステーション検索', 'https://www.eneos-ss.com/search/ss/pc/top.php']
+  ];
   const statusLabels = { passable: '通れた', caution: '注意', blocked: '通れなかった' };
   const trafficLabels = { road_closed: '通行止め', lane_restriction: '車線規制', alternating: '片側交互通行', other: 'その他規制' };
   const $ = (id) => document.getElementById(id);
@@ -115,6 +122,7 @@
   $('traffic-volume-toggle').addEventListener('change', renderTrafficVolume);
   $('delete-all-button').addEventListener('click', () => { if (!records.length) { toast('削除する記録はありません'); return; } if (!window.confirm('保存した記録をすべて削除しますか？')) return; if (!window.confirm('この操作は取り消せません。本当に削除しますか？')) return; records = []; saveRecords(); renderRecords(); toast('保存した記録をすべて削除しました'); });
   $('official-links-button').addEventListener('click', () => { const list = $('official-links-list'); list.replaceChildren(); officialLinks.forEach(([label, url]) => { const li = document.createElement('li'); const link = document.createElement('a'); link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = `${label} ↗`; li.appendChild(link); list.appendChild(li); }); $('links-dialog').showModal(); });
-  document.querySelectorAll('.close-dialog').forEach((button) => button.addEventListener('click', () => $('links-dialog').close())); $('first-use-close').addEventListener('click', () => { localStorage.setItem(FIRST_USE_KEY, 'shown'); $('first-use-dialog').close(); });
+  $('fuel-links-button').addEventListener('click', () => { const list = $('fuel-links-list'); list.replaceChildren(); fuelLinks.forEach(([label, url]) => { const li = document.createElement('li'); const link = document.createElement('a'); link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = `${label} ↗`; li.appendChild(link); list.appendChild(li); }); $('fuel-links-dialog').showModal(); });
+  document.querySelectorAll('.close-dialog').forEach((button) => button.addEventListener('click', () => $('links-dialog').close())); document.querySelectorAll('.close-fuel-dialog').forEach((button) => button.addEventListener('click', () => $('fuel-links-dialog').close())); $('first-use-close').addEventListener('click', () => { localStorage.setItem(FIRST_USE_KEY, 'shown'); $('first-use-dialog').close(); });
   renderRecords(); renderCategory('roads'); loadTrafficData().catch(() => updateTrafficMessage()); loadTrafficVolume().catch(() => {}); if (!localStorage.getItem(FIRST_USE_KEY)) $('first-use-dialog').showModal();
 })();

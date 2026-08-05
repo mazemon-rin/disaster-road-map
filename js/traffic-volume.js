@@ -218,8 +218,6 @@
 
   // 観測地点の近接関係だけを参考線で表示する。実際の道路形状や渋滞を示す線ではない。
   function createReferenceLines(points) {
-    // 熊本市周辺の観測地点間隔を考慮した上限。道路形状ではなく参考線なので、長い線は破線で目立たせる。
-    const maxDistance = 0.35;
     const lines = [];
     const linked = new Set();
     const color = (first, second) => {
@@ -237,7 +235,7 @@
     points.forEach((point, index) => {
       const candidates = points
         .map((other, otherIndex) => ({ other, otherIndex, distance: distance(point, other) }))
-        .filter(({ otherIndex, distance: value }) => otherIndex !== index && value <= maxDistance)
+        .filter(({ otherIndex }) => otherIndex !== index)
         .sort((first, second) => first.distance - second.distance)
         .slice(0, 1);
       candidates.forEach(({ other, otherIndex }) => {

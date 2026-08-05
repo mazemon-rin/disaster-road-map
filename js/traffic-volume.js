@@ -220,6 +220,8 @@
   function createReferenceLines(points) {
     const lines = [];
     const linked = new Set();
+    // 遠すぎる観測地点は、道路と誤認されるため結ばない。
+    const maxDistance = 0.22;
     const color = (first, second) => {
       const levels = [first.level, second.level];
       if (levels.includes('high')) return '#c64a4a';
@@ -235,7 +237,7 @@
     points.forEach((point, index) => {
       const candidates = points
         .map((other, otherIndex) => ({ other, otherIndex, distance: distance(point, other) }))
-        .filter(({ otherIndex }) => otherIndex !== index)
+        .filter(({ otherIndex, distance: value }) => otherIndex !== index && value <= maxDistance)
         .sort((first, second) => first.distance - second.distance)
         .slice(0, 1);
       candidates.forEach(({ other, otherIndex }) => {
@@ -244,7 +246,7 @@
         linked.add(key);
         lines.push(L.polyline(
           [[point.latitude, point.longitude], [other.latitude, other.longitude]],
-          { color: color(point, other), weight: 3, opacity: 0.68, dashArray: '7 7', interactive: false },
+          { color: color(point, other), weight: 5, opacity: 0.9, dashArray: '10 8', interactive: false, pane: 'overlayPane' },
         ));
       });
     });

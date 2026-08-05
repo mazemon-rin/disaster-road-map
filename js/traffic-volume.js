@@ -216,5 +216,41 @@
     }).bindPopup(createPopup(point));
   }
 
-  window.TrafficVolume = { fetchTrafficVolume, createMarker, buildUrl, timeCode, THRESHOLDS };
+  // 観測地点の近接関係だけを参考線で表示する。実際の道路形状や渋滞を示す線ではない。
+  function createReferenceLines(points) {
+    const maxDistance = 0.08;
+    const lines = [];
+    const linked = new Set();
+    const color = (first, second) => {
+      const levels = [first.level, second.level];
+      if (levels.includes('high')) return '#c64a4a';
+      if (levels.includes('normal')) return '#d39721';
+      if (levels.includes('low')) return '#3f8f68';
+      return '#7a9bb0';
+    };
+    const distance = (first, second) => Math.hypot(
+      (first.latitude - second.latitude) * 1.1,
+      (first.longitude - second.longitude) * 0.92,
+    );
+
+    points.forEach((point, index) => {
+      const candidates = points
+        .map((other, otherIndex) => ({ other, otherIndex, distance: distance(point, other) }))
+        .filter(({ otherIndex, distance: value }) => otherIndex !== index && value <= maxDistance)
+        .sort((first, second) => first.distance - second.distance)
+        .slice(0, 2);
+      candidates.forEach(({ other, otherIndex }) => {
+        const key = index < otherIndex ? `${index}-${otherIndex}` : `${otherIndex}-${index}`;
+        if (linked.has(key)) return;
+        linked.add(key);
+        lines.push(L.polyline(
+          [[point.latitude, point.longitude], [other.latitude, other.longitude]],
+          { color: color(point, other), weight: 3, opacity: 0.68, dashArray: '7 7', interactive: false },
+        ));
+      });
+    });
+    return lines;
+  }
+
+  window.TrafficVolume = { fetchTrafficVolume, createMarker, createReferenceLines, buildUrl, timeCode, THRESHOLDS };
 })();

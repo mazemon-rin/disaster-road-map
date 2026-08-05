@@ -74,12 +74,17 @@
       marker.bindPopup(`<strong>${escapeHtml(item.roadName || '道路名未登録')}</strong><br>${escapeHtml(item.title || trafficLabels[item.category] || '交通規制')}<br>${escapeHtml(item.detail || '')}<br><small>更新：${escapeHtml(formatDate(item.updatedAt))}<br>情報元：${escapeHtml(item.source || trafficData.source)}<br>${source}</small>`);
     });
   }
-  function renderTrafficVolume() { trafficVolumeLayer.clearLayers(); if (!$('traffic-volume-toggle').checked) return; trafficVolumePoints.forEach((point) => TrafficVolume.createMarker(point).addTo(trafficVolumeLayer)); }
+  function renderTrafficVolume() {
+    trafficVolumeLayer.clearLayers();
+    if (!$('traffic-volume-toggle').checked) return;
+    TrafficVolume.createReferenceLines(trafficVolumePoints).forEach((line) => line.addTo(trafficVolumeLayer));
+    trafficVolumePoints.forEach((point) => TrafficVolume.createMarker(point).addTo(trafficVolumeLayer));
+  }
   function clearHazardLayers() { Object.values(layers).forEach((layer) => { if (map.hasLayer(layer)) map.removeLayer(layer); }); }
   function renderCategory(category) {
     activeCategory = category; clearHazardLayers(); if (map.hasLayer(trafficLayer)) map.removeLayer(trafficLayer);
     const legend = $('layer-legend'); const categoryNotice = $('category-notice'); legend.hidden = category === 'roads';
-    if (category === 'roads') { trafficLayer.addTo(map); categoryNotice.textContent = '道路規制の公式データは未接続の場合があります。最新情報は公式サイトでも確認してください。'; legend.innerHTML = '<strong>地震・道路規制の凡例</strong><span><i class="legend-swatch traffic-swatch"></i>公式交通規制</span> <span><i class="legend-swatch volume-swatch"></i>交通量観測点</span> <span><i class="legend-swatch user-swatch"></i>利用者記録</span><br>交通量は参考情報です。規制データが未接続の場合は、公式サイトで確認してください。'; }
+    if (category === 'roads') { trafficLayer.addTo(map); categoryNotice.textContent = '道路規制の公式データは未接続の場合があります。最新情報は公式サイトでも確認してください。'; legend.innerHTML = '<strong>地震・道路規制の凡例</strong><span><i class="legend-swatch traffic-swatch"></i>公式交通規制</span> <span><i class="legend-swatch volume-swatch"></i>交通量観測点</span> <span><i class="legend-swatch volume-line-swatch"></i>観測地点間の参考線</span> <span><i class="legend-swatch user-swatch"></i>利用者記録</span><br>交通量の参考線は道路形状や渋滞を示すものではありません。規制データが未接続の場合は、公式サイトで確認してください。'; }
     else if (category === 'flood') { layers.flood.addTo(map); categoryNotice.textContent = 'リアルタイム情報ではありません。洪水浸水想定区域を表示しており、現在の冠水状況ではありません。'; legend.innerHTML = '<strong>洪水・冠水の凡例</strong><span><i class="legend-swatch" style="background:#83b9e5"></i>洪水浸水想定区域（想定最大規模）</span><br>現在の浸水状況や通行可能性を示すものではありません。<br><strong>※この情報はリアルタイムではありません。</strong>最新の状況は公式情報をご確認ください。'; }
     else { layers.landslideSteep.addTo(map); layers.landslideDebris.addTo(map); layers.landslideSlide.addTo(map); categoryNotice.textContent = 'リアルタイム情報ではありません。土砂災害の警戒区域を表示しており、現在の発生状況ではありません。'; legend.innerHTML = '<strong>土砂災害の凡例</strong><span><i class="legend-swatch" style="background:#f0c34a"></i>警戒区域</span> <span><i class="legend-swatch" style="background:#d94c4c"></i>特別警戒区域</span><br>急傾斜地の崩壊・土石流・地すべりを表示しています。<br><strong>※この情報はリアルタイムではありません。</strong>最新の状況は公式情報をご確認ください。'; }
   }

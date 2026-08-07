@@ -14,7 +14,7 @@
       <p class="eyebrow">情報確認の補助ツール</p>
       <div class="app-title-row">
         <h1>熊本 災害道路マップ <span>β</span></h1>
-        <span class="version-badge" aria-label="バージョン 1.10">V1.10</span>
+        <span class="version-badge" aria-label="バージョン 1.20">V1.20</span>
       </div>
       <p class="subtitle">災害リスクと公式情報を一つの地図で確認</p>
     </div>
@@ -23,15 +23,39 @@
   <main class="container">
     <section class="notice-panel" aria-labelledby="notice-title">
       <div class="section-heading"><h2 id="notice-title">⚠ 重要なお知らせ</h2><span class="badge">公式情報を確認</span></div>
-      <p>この欄は公式情報への入口です。リアルタイム情報が未接続の場合があります。最新情報は公式サイトで確認してください。</p>
-      <div class="notice-links">
-        <a href="https://www.jartic.or.jp/" target="_blank" rel="noopener noreferrer">JARTIC 道路交通情報 ↗</a>
-        <a href="https://ihighway.jp/pcsite/" target="_blank" rel="noopener noreferrer">NEXCO iHighway ↗</a>
-        <a href="https://www.pref.kumamoto.jp/bousai/" target="_blank" rel="noopener noreferrer">熊本県防災情報 ↗</a>
-        <a href="https://disaster-map.its-mo.com/" target="_blank" rel="noopener noreferrer">Honda 通行実績情報マップ ↗</a>
-        <a href="https://www.toyota.co.jp/jpn/auto/passable_route/map/" target="_blank" rel="noopener noreferrer">Toyota 通れた道マップ ↗</a>
+      <p>道路・天気・給油の最新状況は、下の公式情報から確認できます。アプリ内の表示だけで判断せず、必ず公式サイトも確認してください。</p>
+      <div class="official-info-links" aria-label="公式情報の分類">
+        <button id="road-links-button" class="button button-outline" type="button">🚗 道路・交通情報</button>
+        <button id="weather-links-button" class="button button-outline" type="button">☔ 気象・雨雲・警報</button>
+        <button id="fuel-links-button" class="button button-outline" type="button">⛽ ガソリン給油状況</button>
       </div>
-      <button id="fuel-links-button" class="button button-outline fuel-links-button" type="button">⛽ ガソリン給油状況まとめ</button>
+    </section>
+
+    <section class="control-panel map-settings" aria-labelledby="controls-title">
+      <h2 id="controls-title">表示する情報</h2>
+      <div class="controls-grid">
+        <label class="field-label" for="region-select">地域を選択
+          <select id="region-select">
+            <option value="kumamoto">熊本市</option>
+            <option value="mashiki">益城町</option>
+            <option value="kashima">嘉島町</option>
+            <option value="mifune">御船町</option>
+            <option value="uto">宇土市</option>
+            <option value="uki">宇城市</option>
+            <option value="aso">阿蘇地域</option>
+            <option value="yatsushiro">八代地域</option>
+            <option value="hitoyoshi">人吉・球磨地域</option>
+          </select>
+        </label>
+        <div class="field-label">災害分類
+          <div class="category-buttons" role="group" aria-label="災害分類">
+            <button class="category-button is-active" data-category="roads" type="button">地震・道路規制</button>
+            <button class="category-button" data-category="flood" type="button"><span>洪水・冠水</span><small>リアルタイム情報ではありません</small></button>
+            <button class="category-button" data-category="landslide" type="button"><span>土砂災害</span><small>リアルタイム情報ではありません</small></button>
+          </div>
+          <p id="category-notice" class="category-notice" role="status">道路規制の公式データは未接続の場合があります。最新情報は公式サイトでも確認してください。</p>
+        </div>
+      </div>
     </section>
 
     <section class="map-section" aria-labelledby="map-title">
@@ -57,31 +81,8 @@
       </div>
     </section>
 
-    <section class="control-panel" aria-labelledby="controls-title">
-      <h2 id="controls-title">表示する情報</h2>
-      <div class="controls-grid">
-        <label class="field-label" for="region-select">地域を選択
-          <select id="region-select">
-            <option value="kumamoto">熊本市</option>
-            <option value="mashiki">益城町</option>
-            <option value="kashima">嘉島町</option>
-            <option value="mifune">御船町</option>
-            <option value="uto">宇土市</option>
-            <option value="uki">宇城市</option>
-            <option value="aso">阿蘇地域</option>
-            <option value="yatsushiro">八代地域</option>
-            <option value="hitoyoshi">人吉・球磨地域</option>
-          </select>
-        </label>
-        <div class="field-label">災害分類
-          <div class="category-buttons" role="group" aria-label="災害分類">
-            <button class="category-button is-active" data-category="roads" type="button">地震・道路規制</button>
-            <button class="category-button" data-category="flood" type="button"><span>洪水・冠水</span><small>リアルタイム情報ではありません</small></button>
-            <button class="category-button" data-category="landslide" type="button"><span>土砂災害</span><small>リアルタイム情報ではありません</small></button>
-          </div>
-          <p id="category-notice" class="category-notice" role="status">道路規制の公式データは未接続の場合があります。最新情報は公式サイトでも確認してください。</p>
-        </div>
-      </div>
+    <section class="control-panel traffic-panel" aria-labelledby="traffic-volume-title">
+      <h2 id="traffic-volume-title">交通量情報</h2>
       <div class="traffic-volume-controls">
         <label><input id="traffic-volume-toggle" type="checkbox" checked> 交通量観測点</label>
         <span id="traffic-volume-status" role="status">交通量情報：未取得</span>
@@ -93,7 +94,7 @@
     <section class="info-section" aria-labelledby="nearby-title">
       <div class="section-heading"><h2 id="nearby-title">周辺の公式情報</h2><span id="last-updated">公式情報：未取得</span></div>
       <p id="data-message">交通規制データは現在接続されていません。最新情報は公式サイトで確認してください。</p>
-      <button id="official-links-button" class="button button-outline" type="button">公式情報を開く</button>
+      <p class="official-links-guide">道路・気象・給油の公式情報は、画面上部の「重要なお知らせ」から確認できます。</p>
     </section>
 
     <section class="record-legend" aria-labelledby="record-legend-title">
@@ -155,8 +156,7 @@
     </div>
   </dialog>
 
-  <dialog id="links-dialog" class="dialog"><div><h2>公式情報へのリンク</h2><ul class="link-list" id="official-links-list"></ul><div class="dialog-actions"><button class="button button-outline close-dialog" type="button">閉じる</button></div></div></dialog>
-  <dialog id="fuel-links-dialog" class="dialog"><div><h2>ガソリン給油状況まとめ</h2><p class="dialog-notice">営業状況・在庫・待ち時間は変動します。表示だけで給油可能とは判断せず、各サイトや店舗へ確認してください。</p><ul class="link-list" id="fuel-links-list"></ul><div class="dialog-actions"><button class="button button-outline close-fuel-dialog" type="button">閉じる</button></div></div></dialog>
+  <dialog id="links-dialog" class="dialog"><div><h2 id="links-dialog-title">公式情報へのリンク</h2><p id="links-dialog-notice" class="dialog-notice" hidden></p><ul class="link-list" id="official-links-list"></ul><div class="dialog-actions"><button class="button button-outline close-dialog" type="button">閉じる</button></div></div></dialog>
   <dialog id="first-use-dialog" class="dialog"><div><h2>ご利用前にお読みください</h2><p>このアプリの表示や利用者の記録は、道路の安全性・通行可能性・避難経路を保証しません。必ず最新の公式情報と現地の指示を確認してください。</p><div class="dialog-actions"><button id="first-use-close" class="button button-primary" type="button">確認しました</button></div></div></dialog>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 

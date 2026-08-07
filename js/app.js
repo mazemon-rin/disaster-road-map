@@ -9,13 +9,18 @@
     mifune: [32.713, 130.8, 13], uto: [32.687, 130.664, 13], uki: [32.647, 130.684, 12],
     aso: [32.95, 131.12, 10], yatsushiro: [32.51, 130.6, 11], hitoyoshi: [32.21, 130.76, 11]
   };
-  const officialLinks = [
+  const roadLinks = [
     ['JARTIC 道路交通情報', 'https://www.jartic.or.jp/'], ['NEXCO西日本 iHighway', 'https://ihighway.jp/pcsite/'],
     ['熊本県 防災情報', 'https://www.pref.kumamoto.jp/bousai/'], ['国土交通省 九州地方整備局', 'https://www.qsr.mlit.go.jp/'],
     ['熊本河川国道事務所 道路情報', 'https://www.qsr.mlit.go.jp/kumamoto/road/index.html'], ['国土交通省 道路情報提供システム', 'https://www.road-info-prvs.mlit.go.jp/roadinfo/sp/spTop_00_0.html'],
     ['Honda 通行実績情報マップ', 'https://disaster-map.its-mo.com/'], ['Toyota 通れた道マップ', 'https://www.toyota.co.jp/jpn/auto/passable_route/map/'],
-    ['気象庁 防災情報', 'https://www.jma.go.jp/bosai/'], ['川の防災情報', 'https://www.river.go.jp/'],
-    ['ハザードマップポータルサイト', 'https://disaportal.gsi.go.jp/']
+    ['川の防災情報', 'https://www.river.go.jp/'], ['ハザードマップポータルサイト', 'https://disaportal.gsi.go.jp/']
+  ];
+  const weatherLinks = [
+    ['気象庁 防災情報（熊本）', 'https://www.jma.go.jp/bosai/#pattern=rain_level&area_type=offices&area_code=430000'],
+    ['気象庁 雨雲の動き（熊本）', 'https://www.jma.go.jp/bosai/nowc/#zoom:8/lat:32.803/lon:130.708/colordepth:normal/elements:hrpns'],
+    ['気象庁 警報・注意報（熊本）', 'https://www.jma.go.jp/bosai/#pattern=warning&area_type=offices&area_code=430000'],
+    ['熊本地方気象台', 'https://www.data.jma.go.jp/kumamoto/']
   ];
   const fuelLinks = [
     ['資源エネルギー庁 熊本地区の給油所営業状況（公式）', 'https://www.enecho-ss.meti.go.jp/b/enecho/'],
@@ -46,7 +51,7 @@
   const recordsLayer = L.layerGroup().addTo(map);
   const trafficLayer = L.layerGroup().addTo(map);
   const trafficVolumeLayer = L.layerGroup().addTo(map);
-  let activeCategory = 'roads'; let pendingPoint = null; let pendingMarker = null; let editingId = null; let detailId = null; let deleteId = null;
+  let activeCategory = 'roads'; let pendingPoint = null; let selectedMarker = null; let pendingMarker = null; let editingId = null; let detailId = null; let deleteId = null;
   let records = loadRecords(); let trafficData = { updatedAt: null, source: '未接続', items: [] }; let trafficVolumePoints = [];
 
   function addMapLegend() {
@@ -97,10 +102,12 @@
     $('selection-coordinates').hidden = !hasSelection;
     $('selection-coordinates').textContent = hasSelection ? `位置の目安：北緯 ${pendingPoint.lat.toFixed(5)} / 東経 ${pendingPoint.lng.toFixed(5)}` : '';
   }
+  function removeSelectedMarker() { if (selectedMarker) { map.removeLayer(selectedMarker); selectedMarker = null; } }
   function removePendingMarker() { if (pendingMarker) { map.removeLayer(pendingMarker); pendingMarker = null; } }
-  function setSelection(point) { pendingPoint = point; removePendingMarker(); updateSelectionUi('📍 場所を選択しました'); setStatus('選択地点を確認してください'); }
-  function showPendingMarker() { if (!pendingPoint) return; removePendingMarker(); pendingMarker = L.circleMarker(pendingPoint, { radius: 9, color: '#a85027', fillColor: '#e99662', fillOpacity: .88, weight: 3, dashArray: '4 3', interactive: false }).addTo(map).bindTooltip('記録する場所', { direction: 'top' }); }
-  function clearSelection() { pendingPoint = null; removePendingMarker(); updateSelectionUi('まだ選択されていません'); setStatus('場所の選択を解除しました'); }
+  function showSelectedMarker() { if (!pendingPoint) return; removeSelectedMarker(); selectedMarker = L.circleMarker(pendingPoint, { radius: 7, color: '#1769aa', fillColor: '#55a9d6', fillOpacity: .28, weight: 2, dashArray: '3 4', interactive: false }).addTo(map).bindTooltip('選択した場所', { direction: 'top', opacity: .78 }); }
+  function setSelection(point) { pendingPoint = point; removePendingMarker(); showSelectedMarker(); updateSelectionUi('📍 場所を選択しました'); setStatus('選択地点を確認してください'); }
+  function showPendingMarker() { if (!pendingPoint) return; removeSelectedMarker(); removePendingMarker(); pendingMarker = L.circleMarker(pendingPoint, { radius: 9, color: '#a85027', fillColor: '#e99662', fillOpacity: .88, weight: 3, dashArray: '4 3', interactive: false }).addTo(map).bindTooltip('記録する場所', { direction: 'top' }); }
+  function clearSelection() { pendingPoint = null; removeSelectedMarker(); removePendingMarker(); updateSelectionUi('まだ選択されていません'); setStatus('場所の選択を解除しました'); }
   function resetRecordInput() { $('record-memo').value = ''; document.querySelectorAll('input[name="record-status"]').forEach((input) => { input.checked = false; }); $('record-save').disabled = true; }
   function beginRecord() { if (!pendingPoint) { toast('地図から場所を選んでください'); return; } showPendingMarker(); openRecordDialog(); }
   function openRecordDialog(record = null) { editingId = record ? record.id : null; $('record-dialog-title').textContent = record ? '通行記録を編集' : 'この場所を記録'; $('record-position').textContent = pendingPoint ? `選択した場所（緯度 ${pendingPoint.lat.toFixed(5)} / 経度 ${pendingPoint.lng.toFixed(5)}）` : record ? `位置：${record.latitude.toFixed(5)}, ${record.longitude.toFixed(5)}` : ''; $('record-memo').value = record?.memo || ''; document.querySelectorAll('input[name="record-status"]').forEach((input) => { input.checked = input.value === record?.status; }); $('record-save').disabled = !record; $('record-dialog').showModal(); }
@@ -127,8 +134,10 @@
   $('location-button').addEventListener('click', requestLocation); $('refresh-button').addEventListener('click', refresh);
   $('traffic-volume-toggle').addEventListener('change', renderTrafficVolume);
   $('delete-all-button').addEventListener('click', () => { if (!records.length) { toast('削除する記録はありません'); return; } if (!window.confirm('保存した記録をすべて削除しますか？')) return; if (!window.confirm('この操作は取り消せません。本当に削除しますか？')) return; records = []; saveRecords(); renderRecords(); toast('保存した記録をすべて削除しました'); });
-  $('official-links-button').addEventListener('click', () => { const list = $('official-links-list'); list.replaceChildren(); officialLinks.forEach(([label, url]) => { const li = document.createElement('li'); const link = document.createElement('a'); link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = `${label} ↗`; li.appendChild(link); list.appendChild(li); }); $('links-dialog').showModal(); });
-  $('fuel-links-button').addEventListener('click', () => { const list = $('fuel-links-list'); list.replaceChildren(); fuelLinks.forEach(([label, url]) => { const li = document.createElement('li'); const link = document.createElement('a'); link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = `${label} ↗`; li.appendChild(link); list.appendChild(li); }); $('fuel-links-dialog').showModal(); });
-  document.querySelectorAll('.close-dialog').forEach((button) => button.addEventListener('click', () => $('links-dialog').close())); document.querySelectorAll('.close-fuel-dialog').forEach((button) => button.addEventListener('click', () => $('fuel-links-dialog').close())); $('first-use-close').addEventListener('click', () => { localStorage.setItem(FIRST_USE_KEY, 'shown'); $('first-use-dialog').close(); });
+  function openLinksDialog(title, links, notice = '') { const list = $('official-links-list'); list.replaceChildren(); $('links-dialog-title').textContent = title; const dialogNotice = $('links-dialog-notice'); dialogNotice.textContent = notice; dialogNotice.hidden = !notice; links.forEach(([label, url]) => { const li = document.createElement('li'); const link = document.createElement('a'); link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = `${label} ↗`; li.appendChild(link); list.appendChild(li); }); $('links-dialog').showModal(); }
+  $('road-links-button').addEventListener('click', () => openLinksDialog('道路・交通情報', roadLinks));
+  $('weather-links-button').addEventListener('click', () => openLinksDialog('気象・雨雲・警報', weatherLinks, '気象情報は変化します。道路への影響は、必ず気象庁・道路管理者などの公式情報で確認してください。'));
+  $('fuel-links-button').addEventListener('click', () => openLinksDialog('ガソリン給油状況', fuelLinks, '営業状況・在庫・待ち時間は変動します。表示だけで給油可能とは判断せず、各サイトや店舗へ確認してください。'));
+  document.querySelectorAll('.close-dialog').forEach((button) => button.addEventListener('click', () => $('links-dialog').close())); $('first-use-close').addEventListener('click', () => { localStorage.setItem(FIRST_USE_KEY, 'shown'); $('first-use-dialog').close(); });
   renderRecords(); renderCategory('roads'); loadTrafficData().catch(() => updateTrafficMessage()); loadTrafficVolume().catch(() => {}); if (!localStorage.getItem(FIRST_USE_KEY)) $('first-use-dialog').showModal();
 })();
